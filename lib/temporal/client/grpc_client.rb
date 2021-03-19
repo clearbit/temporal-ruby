@@ -1,10 +1,8 @@
 require 'grpc'
 require 'google/protobuf/well_known_types'
 require 'securerandom'
-require 'temporal/json'
 require 'temporal/client/errors'
 require 'temporal/client/serializer'
-require 'temporal/client/serializer/payload'
 require 'temporal/client/serializer/failure'
 require 'gen/temporal/api/workflowservice/v1/service_services_pb'
 
@@ -87,7 +85,7 @@ module Temporal
           task_queue: Temporal::Api::TaskQueue::V1::TaskQueue.new(
             name: task_queue
           ),
-          input: Serializer::Payload.new(input).to_proto,
+          input: Temporal::Client.converter.to_payloads(input),
           workflow_execution_timeout: execution_timeout,
           workflow_run_timeout: run_timeout,
           workflow_task_timeout: task_timeout,
@@ -181,7 +179,7 @@ module Temporal
       def record_activity_task_heartbeat(task_token:, details: nil)
         request = Temporal::Api::WorkflowService::V1::RecordActivityTaskHeartbeatRequest.new(
           task_token: task_token,
-          details: Serializer::Payload.new(details).to_proto,
+          details: Temporal::Client.converter.to_payloads(details),
           identity: identity
         )
         client.record_activity_task_heartbeat(request)
@@ -195,7 +193,7 @@ module Temporal
         request = Temporal::Api::WorkflowService::V1::RespondActivityTaskCompletedRequest.new(
           identity: identity,
           task_token: task_token,
-          result: Serializer::Payload.new(result).to_proto,
+          result: Temporal::Client.converter.to_payloads(result),
         )
         client.respond_activity_task_completed(request)
       end
@@ -207,7 +205,7 @@ module Temporal
           workflow_id: workflow_id,
           run_id: run_id,
           activity_id: activity_id,
-          result: Serializer::Payload.new(result).to_proto
+          result: Temporal::Client.converter.to_payloads(result)
         )
         client.respond_activity_task_completed_by_id(request)
       end
@@ -236,7 +234,7 @@ module Temporal
       def respond_activity_task_canceled(task_token:, details: nil)
         request = Temporal::Api::WorkflowService::V1::RespondActivityTaskCanceledRequest.new(
           task_token: task_token,
-          details: Serializer::Payload.new(details).to_proto,
+          details: Temporal::Client.converter.to_payloads(details),
           identity: identity
         )
         client.respond_activity_task_canceled(request)
@@ -258,7 +256,7 @@ module Temporal
             run_id: run_id
           ),
           signal_name: signal,
-          input: Serializer::Payload.new(input).to_proto,
+          input: Temporal::Client.converter.to_payloads(input),
           identity: identity
         )
         client.signal_workflow_execution(request)

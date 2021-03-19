@@ -1,5 +1,4 @@
-require 'temporal/client/serializer/base'
-require 'temporal/client/serializer/payload'
+require 'temporal/client'
 require 'temporal/client/serializer/retry_policy'
 
 module Temporal
@@ -15,7 +14,7 @@ module Temporal
                 workflow_id: object.workflow_id.to_s,
                 workflow_type: Temporal::Api::Common::V1::WorkflowType.new(name: object.workflow_type),
                 task_queue: Temporal::Api::TaskQueue::V1::TaskQueue.new(name: object.task_queue),
-                input: Payload.new(object.input).to_proto,
+                input: Temporal::Client.converter.to_payloads(object.input),
                 workflow_execution_timeout: object.timeouts[:execution],
                 workflow_run_timeout: object.timeouts[:run],
                 workflow_task_timeout: object.timeouts[:task],
