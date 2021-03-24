@@ -85,7 +85,7 @@ module Temporal
           task_queue: Temporal::Api::TaskQueue::V1::TaskQueue.new(
             name: task_queue
           ),
-          input: Temporal::Client.converter.to_payloads(input),
+          input: Temporal.configuration.converter.to_payloads(input),
           workflow_execution_timeout: execution_timeout,
           workflow_run_timeout: run_timeout,
           workflow_task_timeout: task_timeout,
@@ -179,7 +179,7 @@ module Temporal
       def record_activity_task_heartbeat(task_token:, details: nil)
         request = Temporal::Api::WorkflowService::V1::RecordActivityTaskHeartbeatRequest.new(
           task_token: task_token,
-          details: Temporal::Client.converter.to_payloads(details),
+          details: Temporal.configuration.converter.to_payloads(details),
           identity: identity
         )
         client.record_activity_task_heartbeat(request)
@@ -193,7 +193,7 @@ module Temporal
         request = Temporal::Api::WorkflowService::V1::RespondActivityTaskCompletedRequest.new(
           identity: identity,
           task_token: task_token,
-          result: Temporal::Client.converter.to_payloads(result),
+          result: Temporal.configuration.converter.to_payloads(result),
         )
         client.respond_activity_task_completed(request)
       end
@@ -205,7 +205,7 @@ module Temporal
           workflow_id: workflow_id,
           run_id: run_id,
           activity_id: activity_id,
-          result: Temporal::Client.converter.to_payloads(result)
+          result: Temporal.configuration.converter.to_payloads(result)
         )
         client.respond_activity_task_completed_by_id(request)
       end
@@ -234,7 +234,7 @@ module Temporal
       def respond_activity_task_canceled(task_token:, details: nil)
         request = Temporal::Api::WorkflowService::V1::RespondActivityTaskCanceledRequest.new(
           task_token: task_token,
-          details: Temporal::Client.converter.to_payloads(details),
+          details: Temporal.configuration.converter.to_payloads(details),
           identity: identity
         )
         client.respond_activity_task_canceled(request)
@@ -256,7 +256,7 @@ module Temporal
             run_id: run_id
           ),
           signal_name: signal,
-          input: Temporal::Client.converter.to_payloads(input),
+          input: Temporal.configuration.converter.to_payloads(input),
           identity: identity
         )
         client.signal_workflow_execution(request)
