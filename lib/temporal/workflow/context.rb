@@ -21,6 +21,11 @@ module Temporal
         @state_manager = state_manager
         @dispatcher = dispatcher
         @metadata = metadata
+        @completed = false
+      end
+
+      def completed?
+        @completed
       end
 
       def logger
@@ -174,12 +179,32 @@ module Temporal
       def complete(result = nil)
         command = Command::CompleteWorkflow.new(result: result)
         schedule_command(command)
+        completed!
       end
 
       # TODO: check if workflow can be failed
       def fail(exception)
         command = Command::FailWorkflow.new(exception: exception)
         schedule_command(command)
+        completed!
+      end
+
+      def continue_as_new(workflow_class, *input, **args)
+        options = args.delete(:options) || {}
+        input << args unless args.empty?
+
+        execution_options = ExecutionOptions.new(workflow_class, options)
+
+        command = Command::ContinueAsNew.new(
+          workflow_type: execution_options.name,
+          task_queue: execution_options.task_queue,
+          input: input,
+          timeouts: execution_options.timeouts,
+          retry_policy: execution_options.retry_policy,
+          headers: execution_options.headers
+        )
+        schedule_command(command)
+        completed!
       end
 
       def wait_for_all(*futures)
@@ -232,6 +257,10 @@ module Temporal
       private
 
       attr_reader :state_manager, :dispatcher
+
+      def completed!
+        @completed = true
+      end
 
       def schedule_command(command)
         state_manager.schedule(command)
