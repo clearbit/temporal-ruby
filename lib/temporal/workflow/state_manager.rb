@@ -224,15 +224,15 @@ module Temporal
 
         when 'CHILD_WORKFLOW_EXECUTION_FAILED'
           state_machine.fail
-          dispatch(target, 'failed', parse_payloads(event.attributes.failure))
+          dispatch(target, 'failed', parse_failure(event.attributes.failure))
 
         when 'CHILD_WORKFLOW_EXECUTION_CANCELED'
           state_machine.cancel
-          dispatch(target, 'failed', parse_payloads(event.attributes.failure))
+          dispatch(target, 'failed', parse_failure(event.attributes.failure))
 
         when 'CHILD_WORKFLOW_EXECUTION_TIMED_OUT'
           state_machine.time_out
-          dispatch(target, 'failed', parse_payloads(event.attributes.failure))
+          dispatch(target, 'failed', parse_failure(event.attributes.failure))
 
         when 'CHILD_WORKFLOW_EXECUTION_TERMINATED'
           # todo

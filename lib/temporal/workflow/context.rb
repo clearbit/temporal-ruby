@@ -263,10 +263,6 @@ module Temporal
         @completed = true
       end
 
-      def completed!
-        @completed = true
-      end
-
       def schedule_command(command)
         state_manager.schedule(command)
       end
