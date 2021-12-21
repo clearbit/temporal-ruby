@@ -11,10 +11,10 @@ describe Temporal::Activity::TaskProcessor do
     Fabricate(
       :api_activity_task,
       activity_name: activity_name,
-      input: Temporal.configuration.converter.to_payloads(input)
+      input: config.converter.to_payloads(input)
     )
   end
-  let(:metadata) { Temporal::Metadata.generate(Temporal::Metadata::ACTIVITY_TYPE, task) }
+  let(:metadata) { Temporal::Metadata.generate_activity_metadata(task, namespace) }
   let(:activity_name) { 'TestActivity' }
   let(:connection) { instance_double('Temporal::Connection::GRPC') }
   let(:middleware_chain) { Temporal::Middleware::Chain.new }
@@ -30,8 +30,8 @@ describe Temporal::Activity::TaskProcessor do
         .with(config.for_connection)
         .and_return(connection)
       allow(Temporal::Metadata)
-        .to receive(:generate)
-        .with(Temporal::Metadata::ACTIVITY_TYPE, task, namespace)
+        .to receive(:generate_activity_metadata)
+        .with(task, namespace)
         .and_return(metadata)
       allow(Temporal::Activity::Context).to receive(:new).with(connection, metadata).and_return(context)
 
@@ -70,7 +70,7 @@ describe Temporal::Activity::TaskProcessor do
         reported_error = nil
         reported_metadata = nil
 
-        Temporal.configuration.on_error do |error, metadata: nil|
+        config.on_error do |error, metadata: nil|
           reported_error = error
           reported_metadata = metadata.to_h
         end
@@ -187,7 +187,7 @@ describe Temporal::Activity::TaskProcessor do
           reported_error = nil
           reported_metadata = nil
 
-          Temporal.configuration.on_error do |error, metadata: nil|
+          config.on_error do |error, metadata: nil|
             reported_error = error
             reported_metadata = metadata
           end

@@ -3,7 +3,6 @@ require 'temporal/errors'
 require 'temporal/workflow/command'
 require 'temporal/workflow/command_state_machine'
 require 'temporal/workflow/history/event_target'
-require 'temporal/metadata'
 require 'temporal/concerns/payloads'
 require 'temporal/workflow/errors'
 
@@ -106,7 +105,7 @@ module Temporal
             History::EventTarget.workflow,
             'started',
             from_payloads(event.attributes.input),
-            Metadata.generate(Metadata::WORKFLOW_TYPE, event.attributes)
+            event,
           )
 
         when 'WORKFLOW_EXECUTION_COMPLETED'
@@ -163,7 +162,7 @@ module Temporal
 
         when 'ACTIVITY_TASK_CANCELED'
           state_machine.cancel
-          dispatch(target, 'failed', Temporal::Workflow::Errors.generate_error(event.attributes.failure))
+          dispatch(target, 'failed', Temporal::ActivityCanceled.new(from_details_payloads(event.attributes.details)))
 
         when 'TIMER_STARTED'
           state_machine.start

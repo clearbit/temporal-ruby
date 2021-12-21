@@ -19,7 +19,8 @@ module Temporal
                 workflow_run_timeout: object.timeouts[:execution],
                 workflow_task_timeout: object.timeouts[:task],
                 retry_policy: Temporal::Connection::Serializer::RetryPolicy.new(object.retry_policy).to_proto,
-                header: serialize_headers(object.headers)
+                header: serialize_headers(object.headers),
+                memo: serialize_memo(object.memo)
               )
           )
         end
@@ -29,7 +30,13 @@ module Temporal
         def serialize_headers(headers)
           return unless headers
 
-          Temporal::Api::Common::V1::Header.new(fields: object.headers)
+          Temporal::Api::Common::V1::Header.new(fields: to_payload_map(headers))
+        end
+
+        def serialize_memo(memo)
+          return unless memo
+
+          Temporal::Api::Common::V1::Memo.new(fields: to_payload_map(memo))
         end
       end
     end

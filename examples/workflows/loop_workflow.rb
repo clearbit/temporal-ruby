@@ -8,6 +8,10 @@ class LoopWorkflow < Temporal::Workflow
       return workflow.continue_as_new(count - 1)
     end
 
-    return count
+    return {
+      count: count,
+      memo: workflow.metadata.memo,
+      headers: workflow.metadata.headers,
+    }
   end
 end

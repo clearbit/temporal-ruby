@@ -1,13 +1,24 @@
 require 'securerandom'
 
+class TestSerializer
+  extend Temporal::Concerns::Payloads
+end
+
 Fabricator(:api_history_event, from: Temporal::Api::History::V1::HistoryEvent) do
   event_id { 1 }
   event_time { Time.now }
 end
 
 Fabricator(:api_workflow_execution_started_event, from: :api_history_event) do
+  transient :headers
   event_type { Temporal::Api::Enums::V1::EventType::EVENT_TYPE_WORKFLOW_EXECUTION_STARTED }
-  workflow_execution_started_event_attributes do
+  event_time { Time.now }
+  workflow_execution_started_event_attributes do |attrs|
+    header_fields = (attrs[:headers] || {}).each_with_object({}) do |(field, value), h|
+      h[field] = Temporal.configuration.converter.to_payload(value)
+    end
+    header = Temporal::Api::Common::V1::Header.new(fields: header_fields)
+
     Temporal::Api::History::V1::WorkflowExecutionStartedEventAttributes.new(
       workflow_type: Fabricate(:api_workflow_type),
       task_queue: Fabricate(:api_task_queue),
@@ -19,7 +30,7 @@ Fabricator(:api_workflow_execution_started_event, from: :api_history_event) do
       first_execution_run_id: SecureRandom.uuid,
       retry_policy: nil,
       attempt: 0,
-      header: Fabricate(:api_header)
+      header: header,
     )
   end
 end
@@ -111,6 +122,28 @@ Fabricator(:api_activity_task_failed_event, from: :api_history_event) do
       scheduled_event_id: attrs[:event_id] - 2,
       started_event_id: attrs[:event_id] - 1,
       identity: 'test-worker@test-host'
+    )
+  end
+end
+
+Fabricator(:api_activity_task_canceled_event, from: :api_history_event) do
+  event_type { Temporal::Api::Enums::V1::EventType::EVENT_TYPE_ACTIVITY_TASK_CANCELED }
+  activity_task_canceled_event_attributes do |attrs|
+    Temporal::Api::History::V1::ActivityTaskCanceledEventAttributes.new(
+      details: TestSerializer.to_details_payloads('ACTIVITY_ID_NOT_STARTED'),
+      scheduled_event_id: attrs[:event_id] - 2,
+      started_event_id: nil,
+      identity: 'test-worker@test-host'
+    )
+  end
+end
+
+Fabricator(:api_activity_task_cancel_requested_event, from: :api_history_event) do
+  event_type { Temporal::Api::Enums::V1::EventType::EVENT_TYPE_ACTIVITY_TASK_CANCEL_REQUESTED }
+  activity_task_cancel_requested_event_attributes do |attrs|
+    Temporal::Api::History::V1::ActivityTaskCancelRequestedEventAttributes.new(
+      scheduled_event_id: attrs[:event_id] - 1,
+      workflow_task_completed_event_id: attrs[:event_id] - 2,
     )
   end
 end
